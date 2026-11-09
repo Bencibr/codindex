@@ -5,6 +5,15 @@
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-09
+
+### Fixed
+
+- **npm description 被截断**：0.1.1 写的 334 字符超过了 npm 的 255 字符字段上限，
+  registry 上存下的是断在 `(Claude Code, Cursor,` 的半句。现压到 214 字符，
+  保留全部硬指标（32 工具 / 6 语言 / 无 LLM 调用 / 支持的 client），
+  去掉的是同义堆叠（function inventory → functions、control-flow graph → CFG）。
+
 ## [0.1.1] - 2026-11-09
 
 ### Changed
