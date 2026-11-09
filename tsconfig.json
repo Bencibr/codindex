@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+
+    // vitest.config.ts 里开了 globals: true，运行时 beforeAll / afterEach /
+    // describe 等都是全局的；不带这行 tsc 会把它们报成 TS2304 未定义，
+    // 于是「测试能跑、类型检查报错」——两者必须用同一套事实。
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["src/**/*"],
+  "exclude": [
+    "node_modules",
+    "dist",
+
+    // 手工基准脚本，不是测试（vitest 的 include 是 src/tests/**/*.test.ts）。
+    // 它们硬编码了外部仓库路径（/tmp/codegraph-bench、/Volumes/Mac/...），
+    // 也直接 import better-sqlite3 的原始类型；不该进入构建产物，
+    // 也不该让 `npm run build` 因为「本机没那个仓库」而失败。
+    "src/tests/bench-scan.ts",
+    "src/tests/bench"
+  ]
+}

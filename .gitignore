@@ -1,0 +1,45 @@
+node_modules/
+dist/
+data/*.db
+data/*.db-wal
+data/*.db-shm
+.agent-orchestration/
+.env
+
+# Generated artifacts
+.playwright-mcp/
+*.png
+*.jpg
+*.jpeg
+# 但 README 头图的位图版本必须能进仓库 —— 上面通配符会静默吞掉它们，
+# 结果就是 README 里引用的图片在 GitHub 上 404，而本地一切正常。
+!assets/*.png
+!assets/*.jpg
+
+# 本地草稿/一次性分析文档不进版本库；但 README 与 AGENTS/CLAUDE 里公开引用的
+# 文档必须能被 clone 到，否则新环境里那些链接全是死的。
+docs/*
+!docs/REGRESSION-REPORT.md
+!docs/TOOLS.md
+!docs/API.md
+
+# 运行时状态（本地会话产物，不进版本库）
+.bugx/
+
+# 宿主 agent 注册链接：指向 ~/.bugx/core/ 下的文件，属于本地环境装配。
+# 曾经提交过两条，目标目录改名后变成死链，clone 下来就是两个坏文件。
+.opencode/
+
+# ─── 本机环境装配，不属于项目本身 ───
+# 这些文件描述的是「我这台机器怎么连工具」，不是「这个项目怎么用」。
+# clone 者拿去没有任何意义，反而会看到我的绝对路径和内部命令。
+#
+# .claude/settings.json 含本人机器绝对路径；README 已给出配置模板
+# opencode.json 有 24 处调用内部 bugx CLI
+# .mimomcp/ 是内部工具运行日志
+# .agents/ 是 Codex 路径残留，与 .claude/skills 版本仅差 2 行
+.claude/settings.json
+.claude/settings.local.json
+opencode.json
+.mimomcp/
+.agents/

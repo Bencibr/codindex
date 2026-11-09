@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Codindex</title>
+<!-- Mermaid.js for flowchart rendering -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });</script>
+<!-- React -->
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<!-- MUI (v5.15 UMD build) -->
+<script src="https://unpkg.com/@mui/material@5.15.14/umd/material-ui.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+body { margin: 0; background: #0a0a0a; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+#root { min-height: 100vh; }
+/* MUI dark overrides */
+.MuiCard-root { background: #1a1a2e !important; border: 1px solid #2a2a3e !important; }
+.MuiPaper-root { background: #1a1a2e !important; }
+.code-block { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 12px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; overflow-x: auto; white-space: pre; color: #c9d1d9; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect } = React;
+const {
+  ThemeProvider, createTheme, CssBaseline,
+  AppBar, Toolbar, Typography, Box, Container, Grid, Card, CardContent, CardActions,
+  Button, IconButton, TextField, Select, MenuItem, FormControl, InputLabel,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Chip, Alert, CircularProgress, Paper, Divider, Tooltip,
+  Accordion, AccordionSummary, AccordionDetails,
+  List, ListItem, ListItemText, ListItemIcon, ListItemButton,
+  Drawer, Badge, LinearProgress, Stack, Breadcrumbs, Link,
+  Dialog, DialogTitle, DialogContent, DialogActions,
+} = MaterialUI;
+
+// Icons as simple span components (no CDN dependency)
+const Icon = ({children, sx}) => h('span', { sx:{ fontSize:18, lineHeight:1, ...sx }, style:{fontSize:18,lineHeight:1,...(sx||{})} }, children);
+const ArrowBack = (p) => h(Icon, p, '←');
+const Refresh = (p) => h(Icon, p, '🔄');
+const Delete = (p) => h(Icon, p, '🗑');
+const Add = (p) => h(Icon, p, '+');
+const ExpandMore = (p) => h(Icon, p, '▼');
+const ChevronRight = (p) => h(Icon, p, '▶');
+const Code = (p) => h(Icon, p, '📋');
+const InsertDriveFile = (p) => h(Icon, p, '📁');
+const Star = (p) => h(Icon, p, '⭐');
+const TrendingUp = (p) => h(Icon, p, '📈');
+const Assessment = (p) => h(Icon, p, '📊');
+const AccountTree = (p) => h(Icon, p, '🔗');
+const Search = (p) => h(Icon, p, '🔍');
+
+const theme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: { main: '#60a5fa' },
+    secondary: { main: '#a78bfa' },
+    success: { main: '#4ade80' },
+    warning: { main: '#fbbf24' },
+    error: { main: '#f87171' },
+    background: { default: '#0a0a0a', paper: '#1a1a2e' },
+    text: { primary: '#e2e8f0', secondary: '#94a3b8' },
+  },
+  typography: {
+    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+    fontSize: 13,
+  },
+  components: {
+    MuiCard: { styleOverrides: { root: { backgroundImage: 'none', borderRadius: 10 } } },
+    MuiButton: { styleOverrides: { root: { textTransform: 'none', borderRadius: 8 } } },
+    MuiChip: { styleOverrides: { root: { borderRadius: 6 } } },
+    MuiTableCell: { styleOverrides: { root: { borderBottom: '1px solid #2a2a3e', padding: '8px 12px' } } },
+  },
+});
+
+const h = React.createElement;
+const API = (path) => fetch('/api'+path).then(r => { if (!r.ok) throw new Error(r.statusText); return r.json(); })
+  .catch(e => { console.error(e); return null; });
+const apiPost = async (url, opts) => {
+  try { const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, ...opts }); if (!r.ok) throw new Error(r.statusText); return await r.json(); }
+  catch(e) { console.error(e); return null; }
+};
+
+// ─── Tag Chip helper ───
+function TagChips({ tags, onClick }) {
+  if (!tags || tags === '[]') return null;
+  try {
+    const arr = typeof tags === 'string' ? JSON.parse(tags) : tags;
+    if (!Array.isArray(arr) || arr.length === 0) return null;
+    return h(Box, { sx:{ display:'flex', gap:0.5, flexWrap:'wrap' } },
+      arr.map((t,i) => h(Chip, {
+        key:i, label:t, size:'small', variant:'outlined',
+        sx:{ fontSize:11, height:20, borderColor:'#60a5fa40', color:'#60a5fa', cursor: onClick?'pointer':'default' },
+        onClick: onClick ? () => onClick(t) : undefined,
+      }))
+    );
+  } catch { return null; }
+}
+
+// ─── Score Color ───
+const scoreColor = (v) => v >= 85 ? '#4ade80' : v >= 60 ? '#fbbf24' : '#f87171';
+const complexityColor = (v) => v > 10 ? '#f87171' : v > 5 ? '#fbbf24' : '#4ade80';
+
+// ─── Mermaid flowchart renderer ───
+let mermaidInitialized = false;
+async function renderMermaid(container, mermaidText) {
+  if (!mermaidInitialized) {
+    try { mermaid.init(undefined, container); mermaidInitialized = true; } catch {}
+  }
+  try {
+    const { svg } = await window.mermaid.render('mermaid-svg-' + Date.now(), mermaidText);
+    container.innerHTML = svg;
+  } catch(e) {
+    // Show the mermaid source for debugging
+    container.innerHTML =
+      '<div style="color:#f87171;font-size:11px;margin-bottom:4px;">⚠ Mermaid render error: ' + escHtml(e.message) + '</div>' +
+      '<details style="font-size:10px;color:#94a3b8;"><summary>Mermaid source</summary><pre class="code-block" style="white-space:pre-wrap;margin:0;">' + escHtml(mermaidText) + '</pre></details>';
+  }
+}
+
+/** Escape HTML entities */
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/**
+ * Safely escape a string for use inside a Mermaid ["..."] label.
+ * Mermaid shape delimiters: () [] {} <> must be escaped or removed.
+ */
+function mermaidLabel(raw) {
+  return String(raw)
+    .replace(/\\/g, '\\\\')     // backslash first
+    .replace(/"/g, '\\"')        // double quotes
+    .replace(/\n/g, ' ')         // newlines
+    .replace(/[()]/g, '')        // () are shape delimiters
+    .replace(/\[/g, '(').replace(/\]/g, ')')  // [] are shape delimiters → ()
+    .replace(/[{}<>]/g, '')      // {}<> are shape delimiters
+    .trim();
+}
+
+function cfgToMermaid(cfg) {
+  if (!cfg || !cfg.nodes || cfg.nodes.length === 0) return 'graph TD\n  A["No CFG data"]';
+
+  // Assign a stable numeric ID per unique node type for cleaner output
+  let m = 'graph TD\n';
+  const idMap = new Map();
+
+  for (let i = 0; i < cfg.nodes.length; i++) {
+    const n = cfg.nodes[i];
+    const safeId = 'n' + i;
+    idMap.set(n.id, safeId);
+
+    // Build clean label: type + short line ref
+    let label = n.type;
+    if (n.label) {
+      const cleaned = mermaidLabel(n.label);
+      // Truncate long labels to avoid huge nodes
+      label = cleaned.length > 80 ? cleaned.slice(0, 77) + '...' : cleaned;
+    }
+    if (n.lineStart) label += ' L' + n.lineStart;
+
+    // Use [] rectangle syntax explicitly — no ambiguity with shapes
+    m += '  ' + safeId + '[\"' + label + '\"]\n';
+  }
+
+  // Edges with optional label
+  for (const e of cfg.edges) {
+    const src = idMap.get(e.source);
+    const tgt = idMap.get(e.target);
+    if (!src || !tgt) continue;
+    const edgeLabel = e.label ? ' |' + mermaidLabel(e.label) + '| ' : ' ';
+    m += '  ' + src + edgeLabel + ' --> ' + tgt + '\n';
+  }
+  return m;
+}
+
+function flowchartToMermaid(fc) {
+  if (!fc || !fc.nodes || fc.nodes.length === 0) return 'graph TD\n  A["No call chain data"]';
+
+  let m = 'graph LR\n';  // Left→Right is better for call chains
+  const nameMap = new Map();
+
+  // Assign unique numeric IDs — deduplicate by name
+  const seenNames = new Set();
+  for (let i = 0; i < fc.nodes.length; i++) {
+    const n = fc.nodes[i];
+    // Deduplicate: if same name appears at different depths, keep latest (deepest)
+    const base = n.name.replace(/[^a-zA-Z0-9]/g, '_');
+    let nid = base;
+    if (seenNames.has(nid)) {
+      nid = base + '_' + i;
+    }
+    seenNames.add(nid);
+    nameMap.set(n.name, nid);
+
+    const depth = Math.min(n.depth || 0, 4);
+    const cfgInfo = n.cfgSummary ? ' (' + n.cfgSummary.nodes + ' nodes)' : '';
+    const sig = (n.signature || '').replace(/\\/g,'').replace(/"/g,"'").substring(0, 40);
+    const shortName = (n.name || 'fn').replace(/\\/g,'').replace(/"/g,"'");
+    m += '  ' + nid + '[\"' + shortName + cfgInfo + '\"]:::depth' + depth + '\n';
+  }
+
+  // Render edges from API (caller → callee)
+  if (fc.edges && fc.edges.length > 0) {
+    for (const e of fc.edges) {
+      const from = nameMap.get(e.from);
+      const to = nameMap.get(e.to);
+      if (from && to) m += '  ' + from + ' -->|calls| ' + to + '\n';
+    }
+  } else {
+    // Fallback: connect nodes by depth order — ALL pairs, not just first per depth
+    const byDepth = {};
+    for (const n of fc.nodes) {
+      const d = n.depth || 0;
+      if (!byDepth[d]) byDepth[d] = [];
+      byDepth[d].push(n);
+    }
+    const depths = Object.keys(byDepth).sort((a, b) => a - b);
+    for (let i = 0; i < depths.length - 1; i++) {
+      const curNodes = byDepth[depths[i]];
+      const nextNodes = byDepth[depths[i + 1]];
+      for (const cur of curNodes) {
+        for (const nxt of nextNodes) {
+          const from = nameMap.get(cur.name);
+          const to = nameMap.get(nxt.name);
+          if (from && to) m += '  ' + from + ' -->|calls| ' + to + '\n';
+        }
+      }
+    }
+  }
+
+  // Depth styling
+  m += '  classDef depth0 fill:#60a5fa30,stroke:#60a5fa,color:#e2e8f0,stroke-width:2px\n';
+  m += '  classDef depth1 fill:#60a5fa20,stroke:#60a5fa,color:#e2e8f0\n';
+  m += '  classDef depth2 fill:#a78bfa20,stroke:#a78bfa,color:#e2e8f0\n';
+  m += '  classDef depth3 fill:#fbbf2420,stroke:#fbbf24,color:#e2e8f0\n';
+  m += '  classDef depth4 fill:#4ade8020,stroke:#4ade80,color:#e2e8f0\n';
+  return m;
+}
+
+// ─── Router ───
+function Router() {
+  const [route, setRoute] = useState(window.location.pathname);
+  useEffect(() => { const h = () => setRoute(window.location.pathname); window.addEventListener('popstate', h); return () => window.removeEventListener('popstate', h); }, []);
+  const nav = (path) => { window.history.pushState(null, '', path); setRoute(path.split('?')[0]); };
+  const match = (p) => { const m = route.match(new RegExp('^' + p.replace(/:[^/]+/g, '([^/]+)') + '$')); return m ? m.slice(1) : null; };
+
+  let page;
+  let m;
+  if ((m = match('/projects/:id/functions/:fid'))) page = h(FunctionDetail, { projectId:m[0], funcId:m[1], nav });
+  else if ((m = match('/projects/:id/functions/:fid/cfg'))) page = h(CfgView, { projectId:m[0], funcId:m[1], nav });
+  else if ((m = match('/projects/:id/functions'))) page = h(FunctionList, { projectId:m[0], nav });
+  else if ((m = match('/projects/:id/features'))) page = h(FeatureTracking, { projectId:m[0], nav });
+  else if ((m = match('/projects/:id/reuse'))) page = h(ReuseReport, { projectId:m[0], nav });
+  else if ((m = match('/projects/:id/deps'))) page = h(DependencyGraph, { projectId:m[0], nav });
+  else if ((m = match('/projects/:id/files'))) {
+    const fileId = new URLSearchParams(window.location.search).get('file');
+    page = h(FileExplorer, { projectId:m[0], nav, selectFileId: fileId ? Number(fileId) : null });
+  }
+  else if ((m = match('/projects/:id/cfg'))) page = h(CfgView, { projectId:m[0], nav });
+  else if ((m = match('/projects/:id/flowchart'))) page = h(FlowchartView, { projectId:m[0], nav });
+  else if ((m = match('/projects/:id'))) page = h(ProjectDetail, { projectId:m[0], nav });
+  else page = h(Dashboard, { nav });
+
+  return h(ThemeProvider, { theme },
+    h(CssBaseline),
+    h(AppBar, { position:'sticky', sx:{ background:'linear-gradient(135deg, #0f172a 0%, #1a1a2e 100%)', borderBottom:'1px solid #2a2a3e' } },
+      h(Toolbar, { sx:{ minHeight:48 } },
+        h(Typography, { variant:'h6', sx:{ cursor:'pointer', fontWeight:700, background:'linear-gradient(90deg,#60a5fa,#a78bfa)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }, onClick:() => nav('/') }, 'Codindex'),
+      ),
+    ),
+    h(Container, { maxWidth:'xl', sx:{ py:2 } }, page),
+  );
+}
+
+// ─── Dashboard ───
+function Dashboard({ nav }) {
+  const [projects, setProjects] = useState(null);
+  const [name, setName] = useState(''); const [path, setPath] = useState('');
+  useEffect(() => { API('/projects').then(setProjects); }, []);
+  const addProject = async () => { if (!name||!path) return; await apiPost('/api/projects', { body:JSON.stringify({name,path}) }); setName(''); setPath(''); API('/projects').then(setProjects); };
+  const delProject = async (id) => { await fetch('/api/projects/'+id, {method:'DELETE'}); API('/projects').then(setProjects); };
+  const scanProject = async (id) => { await fetch('/api/projects/'+id+'/scan', {method:'POST'}); API('/projects').then(setProjects); };
+  if (!projects) return h(Box, { sx:{ display:'flex', justifyContent:'center', mt:10 } }, h(CircularProgress));
+
+  return h(Box, null,
+    h(Typography, { variant:'h5', sx:{ mb:3, fontWeight:700 } }, '项目列表'),
+    h(Grid, { container:true, spacing:2 },
+      projects.map(p => h(Grid, { item:true, xs:12, md:6, lg:4, key:p.id },
+        h(Card, { sx:{ cursor:'pointer', transition:'all 0.2s', '&:hover':{ borderColor:'#60a5fa40', transform:'translateY(-2px)' } } },
+          h(CardContent, { sx:{ pb:1 } },
+            h(Box, { sx:{ display:'flex', justifyContent:'space-between', alignItems:'center', mb:1 } },
+              h(Typography, { variant:'h6', sx:{ cursor:'pointer', '&:hover':{color:'#60a5fa'} }, onClick:() => nav('/projects/'+p.id) }, p.name),
+              h(Chip, { label:p.status||'pending', size:'small', color: p.status==='ready'?'success':p.status==='scanning'?'warning':'default' }),
+            ),
+            h(Typography, { variant:'body2', color:'text.secondary', sx:{ mb:1, fontFamily:'monospace', fontSize:12 } }, p.path),
+            h(Typography, { variant:'caption', color:'text.secondary' }, '语言: '+(p.language||'未知')),
+          ),
+          h(CardActions, { sx:{ pt:0 } },
+            h(Button, { size:'small', startIcon: h(Refresh), onClick:() => scanProject(p.id) }, '扫描'),
+            h(Button, { size:'small', startIcon: h(Code), onClick:() => nav('/projects/'+p.id+'/functions') }, '函数'),
+            h(Box, { sx:{ flex:1 } }),
+            h(IconButton, { size:'small', color:'error', onClick:() => delProject(p.id) }, h(Delete, { fontSize:'small' })),
+          ),
+        ),
+      )),
+    ),
+    h(Card, { sx:{ mt:3 } },
+      h(CardContent, null,
+        h(Typography, { variant:'subtitle1', sx:{ mb:1.5, fontWeight:600 } }, '添加项目'),
+        h(Stack, { direction:'row', spacing:1.5 },
+          h(TextField, { size:'small', label:'项目名称', value:name, onChange:e=>setName(e.target.value), sx:{ flex:1 } }),
+          h(TextField, { size:'small', label:'项目路径', value:path, onChange:e=>setPath(e.target.value), sx:{ flex:2 } }),
+          h(Button, { variant:'contained', onClick:addProject, startIcon: h(Add) }, '添加'),
+        ),
+      ),
+    ),
+  );
+}
+
+// ─── ProjectDetail ───
+function ProjectDetail({ projectId, nav }) {
+  const [proj, setProj] = useState(null);
+  useEffect(() => { API('/projects/'+projectId).then(setProj); }, [projectId]);
+  if (!proj) return h(Box, { sx:{ display:'flex', justifyContent:'center', mt:10 } }, h(CircularProgress));
+  const s = proj.stats || {};
+  const stats = [{k:'文件',v:s.files,icon:'📁'},{k:'函数',v:s.functions,icon:'📋'},{k:'类型',v:s.types,icon:'📦'},{k:'调用',v:s.calls,icon:'🔗'},{k:'模块',v:s.modules,icon:'🧩'},{k:'依赖',v:s.module_deps,icon:'↔'}];
+  const navItems = [
+    {k:'files',l:'文件',icon:h(InsertDriveFile)},
+    {k:'functions',l:'函数',icon:h(Code)},
+    {k:'features',l:'功能',icon:h(Star)},
+    {k:'reuse',l:'复用',icon:h(TrendingUp)},
+    {k:'deps',l:'依赖图',icon:h(AccountTree)},
+    {k:'cfg',l:'控制流图',icon:h(Search)},
+    {k:'flowchart',l:'流程图',icon:h(TrendingUp)},
+  ];
+  return h(Box, null,
+    h(Button, { startIcon: h(ArrowBack), onClick:() => nav('/'), sx:{ mb:2, color:'#94a3b8' } }, '返回'),
+    h(Typography, { variant:'h5', sx:{ fontWeight:700, mb:0.5 } }, proj.name),
+    h(Typography, { variant:'body2', color:'text.secondary', sx:{ mb:3, fontFamily:'monospace' } }, proj.path),
+    h(Grid, { container:true, spacing:1.5, sx:{ mb:3 } },
+      stats.map(s => h(Grid, { item:true, xs:4, md:2, key:s.k },
+        h(Card, { sx:{ textAlign:'center', py:1.5 } },
+          h(Typography, { variant:'h5', sx:{ fontWeight:700, color:'#60a5fa' } }, s.v ?? 0),
+          h(Typography, { variant:'caption', color:'text.secondary' }, s.k),
+        ),
+      )),
+    ),
+    h(Stack, { direction:'row', spacing:1, flexWrap:'wrap' },
+      navItems.map(n => h(Button, { key:n.k, variant:'outlined', startIcon:n.icon, onClick:() => nav('/projects/'+projectId+'/'+n.k), sx:{ mb:1 } }, n.l)),
+    ),
+  );
+}
+
+// ─── FunctionList ───
+function FunctionList({ projectId, nav }) {
+  const [funcs, setFuncs] = useState(null);
+  const [sort, setSort] = useState('name');
+  const [tagFilter, setTagFilter] = useState('');
+  useEffect(() => { API('/projects/'+projectId+'/functions?sort='+sort+'&limit=500').then(setFuncs); }, [projectId, sort]);
+  if (!funcs) return h(Box, { sx:{ display:'flex', justifyContent:'center', mt:10 } }, h(CircularProgress));
+
+  const filtered = tagFilter ? funcs.filter(f => { try { const t = JSON.parse(f.tags||'[]'); return t.some(x => x.includes(tagFilter)); } catch { return false; } }) : funcs;
+
+  return h(Box, null,
+    h(Stack, { direction:'row', alignItems:'center', spacing:2, sx:{ mb:2 } },
+      h(Button, { startIcon: h(ArrowBack), onClick:() => nav('/projects/'+projectId), sx:{ color:'#94a3b8' } }, '返回'),
+      h(Typography, { variant:'h6', sx:{ fontWeight:700 } }, '函数清单 ('+filtered.length+')'),
+      h(Box, { sx:{ flex:1 } }),
+      tagFilter && h(Chip, { label:'标签: '+tagFilter, onDelete:()=>setTagFilter(''), color:'primary', size:'small' }),
+      h(FormControl, { size:'small', sx:{ minWidth:120 } },
+        h(Select, { value:sort, onChange:e=>setSort(e.target.value), sx:{ fontSize:13 } },
+          h(MenuItem, { value:'name' }, '按名称'),
+          h(MenuItem, { value:'complexity' }, '按复杂度'),
+          h(MenuItem, { value:'reuse_score' }, '按复用分'),
+        ),
+      ),
+    ),
+    h(TableContainer, { component:Paper, sx:{ maxHeight:'calc(100vh - 160px)', overflow:'auto' } },
+      h(Table, { size:'small', stickyHeader:true },
+        h(TableHead, null,
+          h(TableRow, null,
+            ...['名称','类型','行','参数','复杂度','复用分','导出','标签'].map(col =>
+              h(TableCell, { key:col, sx:{ fontWeight:600, fontSize:12, background:'#12122a', position:'sticky', top:0, zIndex:1 } }, col)
+            ),
+          ),
+        ),
+        h(TableBody, null,
+          filtered.map(f => h(TableRow, { key:f.id, hover:true, sx:{ cursor:'pointer', '&:hover':{ background:'#1a1a3e' } }, onClick:() => nav('/projects/'+projectId+'/functions/'+f.id) },
+            h(TableCell, { sx:{ color:'#60a5fa', fontFamily:'monospace', fontSize:12 } }, f.fullName || f.name),
+            h(TableCell, { sx:{ fontSize:12 } }, f.kind),
+            h(TableCell, { sx:{ fontSize:12, fontFamily:'monospace' } }, f.lineStart+'-'+f.lineEnd),
+            h(TableCell, { sx:{ fontSize:12 } }, f.paramsCount),
+            h(TableCell, null, h(Chip, { label:f.complexity, size:'small', sx:{ fontSize:11, height:20, background:complexityColor(f.complexity)+'20', color:complexityColor(f.complexity), fontWeight:600 } })),
+            h(TableCell, null, f.reuseScore != null ? h(Chip, { label:f.reuseScore, size:'small', sx:{ fontSize:11, height:20, background:scoreColor(f.reuseScore)+'20', color:scoreColor(f.reuseScore), fontWeight:600 } }) : '-'),
+            h(TableCell, { sx:{ fontSize:12 } }, f.isExported ? '✓' : ''),
+            h(TableCell, null, h(TagChips, { tags:f.tags, onClick:(t)=>setTagFilter(t) })),
+          )),
+        ),
+      ),
+    ),
+  );
+}
+
+// ─── FunctionDetail ───
+function FunctionDetail({ projectId, funcId, nav }) {
+  const [fn, setFn] = useState(null);
+  const [tab, setTab] = useState(0);
+  const [mermaidCode, setMermaidCode] = useState('');
+  useEffect(() => { API('/projects/'+projectId+'/functions/'+funcId).then(setFn); }, [projectId, funcId]);
+  const loadMermaid = () => {
+    if (!fn) return;
+    // Load CFG
+    API('/projects/'+projectId+'/cfg/'+fn.id).then(cfg => {
+      if (cfg && cfg.nodes) {
+        const code = cfgToMermaid(cfg);
+        setMermaidCode(code);
+        setTimeout(() => {
+          const el = document.getElementById('func-cfg-mermaid');
+          if (el) renderMermaid(el, code);
+        }, 100);
+      }
+    });
+    // Load call chain
+    API('/projects/'+projectId+'/flowchart?func_name='+encodeURIComponent(fn.name||fn.fullName||fn.id)+'&depth=3').then(fc => {
+      if (fc && fc.nodes) {
+        const code = flowchartToMermaid(fc);
+        setMermaidCode(code);
+        setTimeout(() => {
+          const el = document.getElementById('func-flowchart-mermaid');
+          if (el) renderMermaid(el, code);
+        }, 100);
+      }
+    });
+  };
+  if (!fn) return h(Box, { sx:{ display:'flex', justifyContent:'center', mt:10 } }, h(CircularProgress));
+
+  const meta = [
+    {k:'类型',v:fn.kind},{k:'复杂度',v:fn.complexity},{k:'参数',v:fn.paramsCount},
+    {k:'行数',v:fn.linesCount},{k:'导出',v:fn.isExported?'是':'否'},{k:'复用分',v:fn.reuseScore??'-'},
+  ];
+
+  return h(Box, null,
+    h(Button, { startIcon: h(ArrowBack), onClick:() => nav('/projects/'+projectId+'/functions'), sx:{ mb:2, color:'#94a3b8' } }, '返回函数列表'),
+    h(Card, { sx:{ mb:2 } },
+      h(CardContent, null,
+        h(Typography, { variant:'h5', sx:{ fontWeight:700, mb:1 } }, fn.fullName || fn.name),
+        fn.sourceFile && h(Box, { sx:{ mb:1.5, fontSize:13 } },
+          h(Typography, { component:'span', color:'text.secondary' }, '📁 来源: '),
+          h(Link, { component:'button', sx:{ fontFamily:'monospace', fontSize:13 }, onClick:() => nav('/projects/'+projectId+'/files?file='+fn.sourceFile.id) }, fn.sourceFile.path),
+        ),
+        fn.callCount > 0 && h(Box, { sx:{ mb:1.5, fontSize:13 } },
+          h(Typography, { component:'span', color:'text.secondary' }, '📞 被调用: '),
+          h(Chip, { label: fn.callCount+' 次', size:'small', color:'warning', sx:{ mx:0.5 } }),
+          h(Typography, { component:'span', color:'text.secondary' }, '来自 '+(fn.callersByFile||[]).length+' 个文件'),
+        ),
+        h(Grid, { container:true, spacing:1, sx:{ mb:2 } },
+          meta.map(m => h(Grid, { item:true, xs:4, md:2, key:m.k },
+            h(Box, { sx:{ background:'#0d1117', borderRadius:1, p:1 } },
+              h(Typography, { variant:'caption', color:'text.secondary' }, m.k),
+              h(Typography, { sx:{ fontWeight:600, fontSize:14 } }, String(m.v)),
+            ),
+          )),
+        ),
+        fn.tags && fn.tags !== '[]' && h(Box, { sx:{ mb:2 } }, h(TagChips, { tags:fn.tags })),
+        fn.signature && h('pre', { className:'code-block', style:{marginBottom:8} }, fn.signature),
+        fn.docComment && h('pre', { className:'code-block', style:{marginBottom:8, color:'#7ee787'} }, fn.docComment),
+        fn.body && h(Accordion, { sx:{ background:'#0d1117', border:'1px solid #21262d', boxShadow:'none', '&:before':{display:'none'} } },
+          h(AccordionSummary, { expandIcon: h(ExpandMore, { sx:{color:'#94a3b8'} }) },
+            h(Typography, { sx:{ fontSize:12, color:'#94a3b8' } }, '函数体 ('+fn.linesCount+' 行)'),
+          ),
+          h(AccordionDetails, { sx:{ p:0 } },
+            h('pre', { className:'code-block', style:{margin:0, maxHeight:400, overflow:'auto', border:'none', borderRadius:'0 0 10px 10px'} }, fn.body),
+          ),
+        ),
+      ),
+    ),
+    // Callers by file
+    (fn.callersByFile||[]).length > 0 && h(Card, { sx:{ mb:2 } },
+      h(CardContent, null,
+        h(Typography, { variant:'subtitle2', sx:{ mb:1, fontWeight:600 } }, '被调用来源 ('+fn.callCount+' 次)'),
+        fn.callersByFile.map((f,i) => h(Box, { key:i, sx:{ display:'flex', alignItems:'center', py:0.75, borderBottom:'1px solid #2a2a3e', '&:last-child':{border:'none'} } },
+          h(Link, { component:'button', sx:{ flex:1, fontFamily:'monospace', fontSize:12, textAlign:'left' }, onClick:() => nav('/projects/'+projectId+'/files?file='+f.path) }, f.path),
+          h(Chip, { label:f.count+' 次', size:'small', color:'warning', sx:{ fontSize:11, height:20 } }),
+        )),
+      ),
+    ),
+    // Calls to
+    (fn.calls_to||[]).length > 0 && h(Card, { sx:{ mb:2 } },
+      h(CardContent, null,
+        h(Typography, { variant:'subtitle2', sx:{ mb:1, fontWeight:600 } }, '调用 → ('+fn.calls_to.length+')'),
+        fn.calls_to.map((c,i) => h(Box, { key:i, sx:{ display:'flex', alignItems:'center', gap:1, py:0.75, borderBottom:'1px solid #2a2a3e', '&:last-child':{border:'none'}, fontSize:13 } },
+          h(Typography, { sx:{ width:50, color:'#94a3b8', fontFamily:'monospace', fontSize:12, shrink:0 } }, 'L'+c.callLine),
+          h(Link, { component:'button', sx:{ color:'#60a5fa' }, onClick:() => nav('/projects/'+projectId+'/functions/'+c.funcId) }, c.funcName),
+          h(Typography, { variant:'caption', color:'text.secondary' }, c.funcKind),
+          c.filePath && h(Link, { component:'button', sx:{ ml:'auto', fontFamily:'monospace', fontSize:11, color:'#94a3b8' }, onClick:() => nav('/projects/'+projectId+'/files?file='+c.fileId) }, '← '+c.filePath),
+        )),
+      ),
+    ),
+    // Calls from
+    (fn.calls_from||[]).length > 0 && h(Card, { sx:{ mb:2 } },
+      h(CardContent, null,
+        h(Typography, { variant:'subtitle2', sx:{ mb:1, fontWeight:600 } }, '被调用详情 ← ('+fn.calls_from.length+')'),
+        fn.calls_from.map((c,i) => h(Box, { key:i, sx:{ display:'flex', alignItems:'center', gap:1, py:0.75, borderBottom:'1px solid #2a2a3e', '&:last-child':{border:'none'}, fontSize:13 } },
+          h(Link, { component:'button', sx:{ color: c.funcId ? '#60a5fa' : '#94a3b8' }, onClick:() => c.funcId && nav('/projects/'+projectId+'/functions/'+c.funcId) }, c.funcName),
+          h(Typography, { variant:'caption', color:'text.secondary' }, c.funcKind),
+          h(Typography, { sx:{ width:50, color:'#94a3b8', fontFamily:'monospace', fontSize:12, textAlign:'right', shrink:0 } }, 'L'+c.callLine),
+          c.filePath && h(Link, { component:'button', sx:{ ml:'auto', fontFamily:'monospace', fontSize:11, color:'#94a3b8' }, onClick:() => nav('/projects/'+projectId+'/files?file='+c.fileId) }, '← '+c.filePath),
+        )),
+      ),
+    ),
+    // CFG + Call Chain Tabs
+    h(Card, { sx:{ mb:2 } },
+      h(CardContent, null,
+        h(Stack, { direction:'row', spacing:1, sx:{ mb:2 } },
+          h(Button, { size:'small', variant: tab===0?'contained':'outlined', onClick:()=>{setTab(0);loadMermaid();} }, '🔀 控制流图'),
+          h(Button, { size:'small', variant: tab===1?'contained':'outlined', onClick:()=>{setTab(1);loadMermaid();} }, '📞 调用链'),
+        ),
+        h(Box, { id: tab===0?'func-cfg-mermaid':'func-flowchart-mermaid', sx:{ background:'#0d1117', borderRadius:2, p:2, minHeight:200, overflow:'auto' } }),
+      ),
+    ),
+  );
+}
+
+// ─── FeatureTracking ───
+function FeatureTracking({ projectId, nav }) {
+  const [feats, setFeats] = useState(null);
+  useEffect(() => { API('/projects/'+projectId+'/features').then(setFeats); }, [projectId]);
+  if (!feats) return h(Box, { sx:{ display:'flex', justifyContent:'center', mt:10 } }, h(CircularProgress));
+  const pct = (v) => Math.round((v||0)*100);
+  return h(Box, null,
+    h(Button, { startIcon: h(ArrowBack), onClick:() => nav('/projects/'+projectId), sx:{ mb:2, color:'#94a3b8' } }, '返回'),
+    h(Typography, { variant:'h6', sx:{ mb:2, fontWeight:700 } }, '功能追踪 ('+feats.length+')'),
+    feats.length === 0 && h(Alert, { severity:'info', sx:{ background:'#1a1a2e', border:'1px solid #2a2a3e' } }, '无功能点。请添加 PRD 路径后重新扫描。'),
+    feats.map(f => h(Card, { key:f.id, sx:{ mb:1.5 } },
+      h(CardContent, { sx:{ py:1.5, '&:last-child':{pb:1.5} } },
+        h(Box, { sx:{ display:'flex', justifyContent:'space-between', alignItems:'center', mb:1 } },
+          h(Typography, { sx:{ fontWeight:600 } }, f.name),
+          h(Chip, { label:f.status, size:'small', color: f.status==='complete'?'success':f.status==='partial'?'warning':'default' }),
+        ),
+        f.description && h(Typography, { variant:'body2', color:'text.secondary', sx:{ mb:1 } }, f.description),
+        h(LinearProgress, { variant:'determinate', value:pct(f.completion), sx:{ height:6, borderRadius:3, mb:0.5, background:'#0d1117', '& .MuiLinearProgress-bar':{borderRadius:3} } }),
+        h(Typography, { variant:'caption', color:'text.secondary' }, '完成度: '+pct(f.completion)+'% | 优先级: '+f.priority),
+      ),
+    )),
+  );
+}
+
+// ─── ReuseReport ───
+function ReuseReport({ projectId, nav }) {
+  const [data, setData] = useState(null);
+  useEffect(() => { API('/projects/'+projectId+'/reuse?sort=reuse').then(setData); }, [projectId]);
+  if (!data) return h(Box, { sx:{ display:'flex', justifyContent:'center', mt:10 } }, h(CircularProgress));
+  return h(Box, null,
+    h(Button, { startIcon: h(ArrowBack), onClick:() => nav('/projects/'+projectId), sx:{ mb:2, color:'#94a3b8' } }, '返回'),
+    h(Typography, { variant:'h6', sx:{ mb:2, fontWeight:700 } }, '复用评分报告'),
+    h(Stack, { direction:'row', spacing:1.5, sx:{ mb:2 } },
+      h(Chip, { icon: h(Star), label:'高复用: '+(data.groups?.high||0), color:'success', variant:'outlined' }),
+      h(Chip, { icon: h(TrendingUp), label:'可复用: '+(data.groups?.medium||0), color:'warning', variant:'outlined' }),
+      h(Chip, { icon: h(Assessment), label:'有限: '+(data.groups?.low||0), variant:'outlined' }),
+    ),
+    h(TableContainer, { component:Paper },
+      h(Table, { size:'small' },
+        h(TableHead, null, h(TableRow, null,
+          ...['函数','复用分','复杂度','行数','导出'].map(col => h(TableCell, { key:col, sx:{ fontWeight:600, fontSize:12, background:'#12122a' } }, col)),
+        )),
+        h(TableBody, null,
+          (data.functions||[]).map(f => h(TableRow, { key:f.id, hover:true, sx:{ cursor:'pointer' }, onClick:()=>nav('/projects/'+projectId+'/functions/'+f.id) },
+            h(TableCell, { sx:{ color:'#60a5fa', fontFamily:'monospace', fontSize:12 } }, f.fullName||f.name),
+            h(TableCell, null,
+              h(Box, { sx:{ display:'flex', alignItems:'center', gap:1 } },
+                h(Box, { sx:{ flex:1, height:4, background:'#0d1117', borderRadius:2, overflow:'hidden' } },
+                  h(Box, { sx:{ width:Math.min(f.reuseScore||0,100)+'%', height:'100%', background:scoreColor(f.reuseScore), borderRadius:2 } }),
+                ),
+                h(Typography, { sx:{ fontSize:11, width:24, textAlign:'right', color:scoreColor(f.reuseScore) } }, f.reuseScore),
+              ),
+            ),
+            h(TableCell, { sx:{ color:complexityColor(f.complexity), fontSize:12 } }, f.complexity),
+            h(TableCell, { sx:{ fontSize:12 } }, f.linesCount),
+            h(TableCell, { sx:{ fontSize:12 } }, f.isExported?'✓':''),
+          )),
+        ),
+      ),
+    ),
+  );
+}
+
+// ─── CfgView — CFG flowchart for a project ───
+function CfgView({ projectId, nav }) {
+  const [cfgs, setCfgs] = useState(null);
+  const [selected, setSelected] = useState(null);
+  const [mermaidCode, setMermaidCode] = useState('');
+  useEffect(() => {
+    API('/projects/' + projectId + '/cfg').then(data => {
+      if (data) setCfgs(data);
+    });
+  }, [projectId]);
+  const selectFunc = (f) => {
+    setSelected(f);
+    setMermaidCode('');
+    API('/projects/' + projectId + '/cfg/' + f.id).then(cfg => {
+      if (cfg && cfg.nodes) {
+        const code = cfgToMermaid(cfg);
+        setMermaidCode(code);
+        setTimeout(() => {
+          const el = document.getElementById('cfg-mermaid-container');
+          if (el) renderMermaid(el, code);
+        }, 100);
+      }
+    });
+  };
+  if (!cfgs) return h(Box, { sx:{ display:'flex', justifyContent:'center', mt:10 } }, h(CircularProgress));
+  const { modules, functions } = cfgs;
+
+  return h(Box, null,
+    h(Button, { startIcon: h(ArrowBack), onClick:() => nav('/projects/'+projectId), sx:{ mb:2, color:'#94a3b8' } }, '返回'),
+    h(Typography, { variant:'h6', sx:{ mb:2, fontWeight:700 } }, '控制流图 (' + modules.length + ' 模块, ' + functions.length + ' 函数)'),
+    h(Grid, { container:true, spacing:2, sx:{ height:'calc(100vh - 140px)' } },
+      h(Grid, { item:true, xs:4, sx:{ overflow:'auto' } },
+        h(Card, { sx:{ height:'100%', p:1 } },
+          h(Typography, { variant:'subtitle2', sx:{ mb:1, fontWeight:600 } }, '函数列表'),
+          functions.map(f => h(Box, {
+            key: f.id,
+            onClick: () => selectFunc(f),
+            sx: {
+              display:'flex', justifyContent:'space-between', alignItems:'center',
+              py:0.5, px:1, borderRadius:1, cursor:'pointer', fontSize:12, fontFamily:'monospace',
+              mb:0.5, background: selected && selected.id === f.id ? '#60a5fa20' : 'transparent',
+              '&:hover': { background: '#1a1a3e' },
+            }
+          },
+            h(Box, { sx:{ flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' } }, f.name),
+            h(Chip, { label: (f.cfgSummary||{}).totalNodes||0, size:'tiny', sx:{ fontSize:10, height:16 } }),
+          )),
+        ),
+      ),
+      h(Grid, { item:true, xs:8, sx:{ overflow:'auto' } },
+        h(Card, { sx:{ height:'100%' } },
+          h(CardContent, { sx:{ p:2, height:'100%', overflow:'auto' } },
+            !selected
+              ? h(Typography, { sx:{ color:'#94a3b8', textAlign:'center', mt:5 } }, '← 选择左侧函数查看控制流图')
+              : h(Box, null,
+                  h(Typography, { variant:'h6', sx:{ fontWeight:700, fontFamily:'monospace', mb:1 } }, selected.name),
+                  h(Typography, { variant:'body2', color:'text.secondary', sx:{ fontFamily:'monospace', mb:2, fontSize:12 } }, selected.path + ' L' + selected.lineStart),
+                  h(Box, { sx:{ display:'flex', gap:1, mb:2, fontSize:12 } },
+                    h(Chip, { label:'Nodes: '+(selected.cfgSummary?.totalNodes||0), size:'small', color:'info' }),
+                    h(Chip, { label:'Branches: '+(selected.cfgSummary?.branches||0), size:'small', color:'warning' }),
+                    h(Chip, { label:'Loops: '+(selected.cfgSummary?.loops||0), size:'small', color:'error' }),
+                  ),
+                  h(Box, { id:'cfg-mermaid-container', sx:{ background:'#0d1117', borderRadius:2, p:2, minHeight:200, overflow:'auto' } }),
+                ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+// ─── FlowchartView — call chain flowchart for a project ───
+function FlowchartView({ projectId, nav }) {
+  const [funcs, setFuncs] = useState(null);
+  const [selected, setSelected] = useState(null);
+  const [mermaidCode, setMermaidCode] = useState('');
+  useEffect(() => {
+    API('/projects/' + projectId + '/functions').then(data => {
+      if (data) setFuncs(data);
+    });
+  }, [projectId]);
+  const selectFunc = (f) => {
+    setSelected(f);
+    setMermaidCode('');
+    const params = new URLSearchParams({ func_name: encodeURIComponent(f.name || f.fullName || f.id), depth: '3' });
+    API('/projects/' + projectId + '/flowchart?' + params).then(fc => {
+      if (fc && fc.nodes && fc.nodes.length > 0) {
+        const code = flowchartToMermaid(fc);
+        setMermaidCode(code);
+        setTimeout(() => {
+          const el = document.getElementById('fc-mermaid-container');
+          if (el) renderMermaid(el, code);
+        }, 100);
+      }
+    });
+  };
+  if (!funcs) return h(Box, { sx:{ display:'flex', justifyContent:'center', mt:10 } }, h(CircularProgress));
+
+  return h(Box, null,
+    h(Button, { startIcon: h(ArrowBack), onClick:() => nav('/projects/'+projectId), sx:{ mb:2, color:'#94a3b8' } }, '返回'),
+    h(Typography, { variant:'h6', sx:{ mb:2, fontWeight:700 } }, '调用流程图 (' + funcs.length + ' 函数)'),
+    h(Grid, { container:true, spacing:2, sx:{ height:'calc(100vh - 140px)' } },
+      h(Grid, { item:true, xs:4, sx:{ overflow:'auto' } },
+        h(Card, { sx:{ height:'100%', p:1 } },
+          h(Typography, { variant:'subtitle2', sx:{ mb:1, fontWeight:600 } }, '函数列表'),
+          funcs.map(f => h(Box, {
+            key: f.id,
+            onClick: () => selectFunc(f),
+            sx: {
+              display:'flex', justifyContent:'space-between', alignItems:'center',
+              py:0.5, px:1, borderRadius:1, cursor:'pointer', fontSize:12, fontFamily:'monospace',
+              mb:0.5, background: selected && selected.id === f.id ? '#60a5fa20' : 'transparent',
+              '&:hover': { background: '#1a1a3e' },
+            }
+          },
+            h(Box, { sx:{ flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' } }, f.name),
+            h(Chip, { label: f.kind || 'function', size:'tiny', sx:{ fontSize:10, height:16 } }),
+          )),
+        ),
+      ),
+      h(Grid, { item:true, xs:8, sx:{ overflow:'auto' } },
+        h(Card, { sx:{ height:'100%' } },
+          h(CardContent, { sx:{ p:2, height:'100%', overflow:'auto' } },
+            !selected
+              ? h(Typography, { sx:{ color:'#94a3b8', textAlign:'center', mt:5 } }, '← 选择左侧函数查看调用链')
+              : h(Box, null,
+                  h(Typography, { variant:'h6', sx:{ fontWeight:700, fontFamily:'monospace', mb:1 } }, selected.name),
+                  h(Typography, { variant:'body2', color:'text.secondary', sx:{ fontFamily:'monospace', mb:2, fontSize:12 } }, 'id: ' + selected.id),
+                  h(Box, { id:'fc-mermaid-container', sx:{ background:'#0d1117', borderRadius:2, p:2, minHeight:200, overflow:'auto' } }),
+                ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+// ─── DependencyGraph with Mermaid flowchart ───
+function DependencyGraph({ projectId, nav }) {
+  const [data, setData] = useState(null);
+  const [showMermaid, setShowMermaid] = useState(false);
+  useEffect(() => { API('/projects/'+projectId+'/deps').then(setData); }, [projectId]);
+  if (!data) return h(Box, { sx:{ display:'flex', justifyContent:'center', mt:10 } }, h(CircularProgress));
+  const { modules=[], dependencies=[], cycles=[] } = data;
+
+  // Build mermaid graph from dependencies
+  const mermaidCode = dependencies.length > 0
+    ? 'graph LR\n' + dependencies.map(d => {
+        const fromM = modules.find(m=>m.id===d.moduleId);
+        const toM = modules.find(m=>m.id===d.depModuleId);
+        return '  ' + (fromM?.name||'?') + ' -->|' + (d.depType||'') + '| ' + (toM?.name||'?');
+      }).join('\n')
+    : 'graph LR\n  A["No dependencies"]';
+
+  return h(Box, null,
+    h(Button, { startIcon: h(ArrowBack), onClick:() => nav('/projects/'+projectId), sx:{ mb:2, color:'#94a3b8' } }, '返回'),
+    h(Typography, { variant:'h6', sx:{ mb:2, fontWeight:700 } }, '模块依赖图'),
+    h(Stack, { direction:'row', spacing:1.5, sx:{ mb:2 } },
+      h(Chip, { label:'📦 模块: '+modules.length, variant:'outlined' }),
+      h(Chip, { label:'🔗 依赖: '+dependencies.length, variant:'outlined' }),
+      h(Chip, { label:'🔁 循环: '+(cycles.length||'无'), color: cycles.length?'error':'default', variant:'outlined' }),
+    ),
+    cycles.length > 0 && h(Alert, { severity:'error', sx:{ mb:2, background:'#1a1a2e', border:'1px solid #f8717140' } },
+      h(Typography, { sx:{ fontWeight:600, mb:0.5 } }, '检测到循环依赖'),
+      cycles.map((c,i) => h(Typography, { key:i, sx:{ fontFamily:'monospace', fontSize:12 } }, c)),
+    ),
+    // Mermaid flowchart toggle
+    h(Box, { sx:{ my:2, display:'flex', gap:1 } },
+      h(Button, { size:'small', variant: showMermaid ? 'contained' : 'outlined', onClick:() => { setShowMermaid(!showMermaid); if(!showMermaid) setTimeout(()=>{ const el=document.getElementById('deps-mermaid'); if(el) renderMermaid(el, mermaidCode); }, 100); } }, '📊 流程图'),
+    ),
+    showMermaid && h(Box, { id:'deps-mermaid', sx:{ background:'#0d1117', borderRadius:2, p:2, mb:2, minHeight:150, overflow:'auto' } }),
+    dependencies.length > 0 && h(TableContainer, { component:Paper },
+      h(Table, { size:'small' },
+        h(TableHead, null, h(TableRow, null, ...['模块','依赖','类型'].map(col => h(TableCell, { key:col, sx:{ fontWeight:600, fontSize:12, background:'#12122a' } }, col)))),
+        h(TableBody, null,
+          dependencies.map(d => { const fromM = modules.find(m=>m.id===d.moduleId); const toM = modules.find(m=>m.id===d.depModuleId);
+            return h(TableRow, { key:d.id },
+              h(TableCell, { sx:{ color:'#60a5fa', fontFamily:'monospace', fontSize:12 } }, fromM?.name||'?'),
+              h(TableCell, { sx:{ fontSize:12 } }, '→ '+(toM?.name||'?')),
+              h(TableCell, { sx:{ color:'#94a3b8', fontSize:12 } }, d.depType),
+            );
+          }),
+        ),
+      ),
+    ),
+  );
+}
+
+// ─── FileExplorer (tree + detail split) ───
+function FileExplorer({ projectId, nav, selectFileId }) {
+  const [files, setFiles] = useState(null);
+  const [selected, setSelected] = useState(selectFileId || null);
+  const [detail, setDetail] = useState(null);
+  const [search, setSearch] = useState('');
+  const [expanded, setExpanded] = useState({});
+  useEffect(() => { API('/projects/'+projectId+'/files').then(f => { if(f) { setFiles(f); autoExpand(f, selectFileId); } }); }, [projectId]);
+  useEffect(() => { if (!selected) { setDetail(null); return; } API('/projects/'+projectId+'/files/'+selected).then(setDetail); }, [projectId, selected]);
+
+  const autoExpand = (files, selId) => {
+    const ex = {};
+    for (const f of files) { const p = f.path.split('/'); if(p.length>1) ex[p[0]]=true; if(p.length>2) ex[p.slice(0,2).join('/')]=true; }
+    if (selId) { const sel = files.find(f=>f.id===selId); if(sel) { const p=sel.path.split('/'); for(let i=1;i<p.length;i++) ex[p.slice(0,i).join('/')]=true; } }
+    setExpanded(ex);
+  };
+  if (!files) return h(Box, { sx:{ display:'flex', justifyContent:'center', mt:10 } }, h(CircularProgress));
+
+  const tree = {};
+  for (const f of files) { const parts=f.path.split('/'); let node=tree; for(let i=0;i<parts.length-1;i++){if(!node[parts[i]])node[parts[i]]={__children:{}};node=node[parts[i]].__children;} node[parts[parts.length-1]]={__file:f}; }
+  const searchHits = search ? new Set(files.filter(f=>f.path.toLowerCase().includes(search.toLowerCase())).map(f=>f.path)) : null;
+  const folderHasHit = (fp,node) => { for(const[n,child]of Object.entries(node)){if(n==='__children'||n==='__file')continue;const full=fp?fp+'/'+n:n;if(child.__file){if(searchHits.has(child.__file.path))return true;}else if(searchHits.has(full)||folderHasHit(full,child.__children||{}))return true;}return false; };
+  const toggle = (key) => setExpanded(prev=>({...prev,[key]:!prev[key]}));
+
+  const fileIcon = (ext) => ({ts:'📘',tsx:'📘',js:'📙',jsx:'📙',py:'🐍',go:'🔷',rs:'🦀',java:'☕',html:'🌐',css:'🎨',json:'📋',md:'📝'}[ext]||'📄');
+
+  const renderNode = (name, node, depth, parentPath) => {
+    const fullPath = parentPath ? parentPath+'/'+name : name;
+    if (node.__file) {
+      const f = node.__file;
+      if (searchHits && !searchHits.has(f.path)) return null;
+      const ext = name.split('.').pop();
+      const isSel = selected === f.id;
+      return h(ListItemButton, { key:f.id, onClick:()=>setSelected(f.id), selected:isSel, sx:{ pl:depth*2+1, py:0.25, borderRadius:1, minHeight:32 } },
+        h(ListItemIcon, { sx:{ minWidth:20 } }, h(Typography, { sx:{ fontSize:14 } }, fileIcon(ext))),
+        h(ListItemText, { primary:name, primaryTypographyProps:{ sx:{ fontSize:12, fontFamily:'monospace' } } }),
+        f.lines && h(Typography, { sx:{ fontSize:10, color:'#94a3b8', shrink:0 } }, f.lines+'L'),
+      );
+    }
+    const children = node.__children || {};
+    const isExpanded = expanded[fullPath];
+    if (searchHits && !folderHasHit(fullPath, children)) return null;
+    const childKeys = Object.keys(children).sort((a,b) => { const aF=!!children[a].__file, bF=!!children[b].__file; if(aF!==bF)return aF?1:-1; return a.localeCompare(b); });
+    const fileCount = childKeys.filter(k=>children[k].__file).length;
+    const dirCount = childKeys.filter(k=>!children[k].__file).length;
+    return h(Box, { key:fullPath },
+      h(ListItemButton, { onClick:()=>toggle(fullPath), sx:{ pl:depth*2+1, py:0.25, borderRadius:1, minHeight:32 } },
+        h(ListItemIcon, { sx:{ minWidth:16 } }, isExpanded ? h(ExpandMore, { sx:{fontSize:16,color:'#94a3b8'}}) : h(ChevronRight, { sx:{fontSize:16,color:'#94a3b8'}})),
+        h(ListItemIcon, { sx:{ minWidth:20 } }, h(Typography, { sx:{ fontSize:14 } }, isExpanded ? '📂' : '📁')),
+        h(ListItemText, { primary:name, primaryTypographyProps:{ sx:{ fontSize:12, fontWeight:600, color:'#fbbf24' } } }),
+        h(Typography, { sx:{ fontSize:10, color:'#94a3b8' } }, dirCount+'📁 '+fileCount+'📄'),
+      ),
+      isExpanded && h(List, { disablePadding:true }, childKeys.map(k => renderNode(k, children[k], depth+1, fullPath))),
+    );
+  };
+  const topLevel = Object.keys(tree).sort((a,b) => { const aF=!!tree[a].__file, bF=!!tree[b].__file; if(aF!==bF)return aF?1:-1; return a.localeCompare(b); });
+  const totalLines = files.reduce((s,f)=>s+(f.lines||0),0);
+  const totalCode = files.reduce((s,f)=>s+(f.codeLines||0),0);
+
+  return h(Box, { sx:{ display:'flex', flexDirection:'column', height:'calc(100vh - 80px)' } },
+    h(Stack, { direction:'row', alignItems:'center', spacing:2, sx:{ mb:1.5 } },
+      h(Button, { startIcon: h(ArrowBack), onClick:() => nav('/projects/'+projectId), sx:{ color:'#94a3b8' } }, '返回'),
+      h(Typography, { variant:'h6', sx:{ fontWeight:700 } }, '文件浏览器'),
+      h(Typography, { variant:'body2', color:'text.secondary' }, files.length+' 文件 | '+totalLines+' 行 | '+totalCode+' 代码'),
+      h(Box, { sx:{ flex:1 } }),
+      h(TextField, { size:'small', placeholder:'搜索文件...', value:search, onChange:e=>setSearch(e.target.value), sx:{ width:250, '& .MuiInputBase-root':{fontSize:13} } }),
+    ),
+    h(Box, { sx:{ display:'flex', gap:1.5, flex:1, minHeight:0 } },
+      // Left: Tree
+      h(Paper, { sx:{ width:300, shrink:0, overflow:'auto', p:1, background:'#12122a', border:'1px solid #2a2a3e' } },
+        h(Stack, { direction:'row', spacing:1, sx:{ mb:1 } },
+          h(Button, { size:'small', sx:{ fontSize:10, color:'#94a3b8' }, onClick:()=>{const ex={};for(const f of files){const p=f.path.split('/');for(let i=1;i<p.length;i++)ex[p.slice(0,i).join('/')]=true;}setExpanded(ex);} }, '全部展开'),
+          h(Button, { size:'small', sx:{ fontSize:10, color:'#94a3b8' }, onClick:()=>setExpanded({}) }, '全部折叠'),
+        ),
+        h(List, { disablePadding:true }, topLevel.map(name => renderNode(name, tree[name], 0, ''))),
+      ),
+      // Right: Detail
+      h(Paper, { sx:{ flex:1, overflow:'auto', p:2, background:'#12122a', border:'1px solid #2a2a3e' } },
+        !selected
+          ? h(Box, { sx:{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', color:'#94a3b8' } }, '← 点击左侧文件查看详情')
+          : !detail
+            ? h(Box, { sx:{ display:'flex', justifyContent:'center', mt:5 } }, h(CircularProgress))
+            : h(Box, null,
+                h(Typography, { variant:'h6', sx:{ fontWeight:700, fontFamily:'monospace', mb:2 } }, detail.path),
+                h(Grid, { container:true, spacing:1, sx:{ mb:2 } },
+                  ...Object.entries({ 语言:detail.language, 总行数:detail.lines, 代码行:detail.codeLines, 注释行:detail.commentLines, 复杂度:detail.complexity, 模块:detail.module }).map(([k,v]) =>
+                    h(Grid, { item:true, xs:4, md:2, key:k },
+                      h(Box, { sx:{ background:'#0d1117', borderRadius:1, p:1 } },
+                        h(Typography, { variant:'caption', color:'text.secondary' }, k),
+                        h(Typography, { sx:{ fontWeight:600, fontSize:14 } }, String(v ?? '-')),
+                      ),
+                    ),
+                  ),
+                ),
+                h(Typography, { variant:'subtitle2', sx:{ mb:1, fontWeight:600 } }, '关联函数 ('+(detail.functions||[]).length+')'),
+                (detail.functions||[]).length === 0
+                  ? h(Typography, { variant:'body2', color:'text.secondary' }, '此文件无函数定义')
+                  : h(Stack, { spacing:0.5 },
+                      (detail.functions||[]).map(f => h(Box, {
+                        key:f.id, onClick:()=>nav('/projects/'+projectId+'/functions/'+f.id),
+                        sx:{ display:'flex', justifyContent:'space-between', alignItems:'center', py:0.75, px:1, borderRadius:1, cursor:'pointer', '&:hover':{background:'#1a1a3e'}, fontSize:13 },
+                      },
+                        h(Box, { sx:{ display:'flex', alignItems:'center', gap:1 } },
+                          h(Typography, { sx:{ color:'#60a5fa', fontFamily:'monospace' } }, f.name),
+                          h(Typography, { sx:{ color:'#94a3b8', fontSize:11 } }, f.kind),
+                          h(Typography, { sx:{ color:'#94a3b8', fontSize:11 } }, 'L'+f.lineStart+'-'+f.lineEnd),
+                        ),
+                        h(Box, { sx:{ display:'flex', gap:1.5, fontSize:11, color:'#94a3b8' } },
+                          f.isExported && h(Typography, { sx:{ color:'#4ade80', fontSize:11 } }, 'export'),
+                          h(Typography, { sx:{ fontSize:11 } }, '复杂度:'+f.complexity),
+                          f.reuseScore!=null && h(Typography, { sx:{ fontSize:11 } }, '复用:'+f.reuseScore),
+                        ),
+                      )),
+                    ),
+              ),
+      ),
+    ),
+  );
+}
+
+// ─── Mount ───
+ReactDOM.createRoot(document.getElementById('root')).render(h(Router));
+</script>
+</body>
+</html>

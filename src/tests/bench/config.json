@@ -1,0 +1,39 @@
+{
+  "description": "Benchmark: run code-understanding questions against CodeGraph repo with/without Codindex MCP",
+  "version": "0.1.0",
+  "repo": {
+    "path": "/tmp/codegraph-bench",
+    "name": "codegraph"
+  },
+  "model": "claude-opus-4-8",
+  "runs_per_condition": 1,
+  "questions": [
+    {
+      "id": "Q1",
+      "prompt": "I need to understand the architecture of the CodeGraph project at /tmp/codegraph-bench. Answer these questions: (1) What are the main modules/packages? (2) How do they depend on each other? (3) What is the entry point and how does a typical request flow through the system? Be specific about the key files and their roles."
+    },
+    {
+      "id": "Q2",
+      "prompt": "In the CodeGraph project at /tmp/codegraph-bench, trace the full extraction pipeline: how does a source file get parsed into graph nodes and edges? Start from the entry point, follow through file collection, tree-sitter parsing, call resolution, and database storage. List the key functions in the call chain and what each one does."
+    }
+  ],
+  "conditions": {
+    "with_codindex": {
+      "description": "Claude Code with Codindex MCP server available",
+      "mcp_config": {
+        "codindex": {
+          "type": "stdio",
+          "command": "npx",
+          "args": ["tsx", "/Volumes/Mac/Workspace/codindex/src/index.ts", "--mcp"],
+          "env": {
+            "CODINDEX_DB": "/Volumes/Mac/Workspace/codindex/data/codindex.db"
+          }
+        }
+      }
+    },
+    "without_codindex": {
+      "description": "Claude Code with no MCP tools (empty config)",
+      "mcp_config": {}
+    }
+  }
+}

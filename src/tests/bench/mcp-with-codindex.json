@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "codindex": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["tsx", "/Volumes/Mac/Workspace/codindex/src/index.ts", "--mcp"],
+      "env": {
+        "CODINDEX_DB": "/Volumes/Mac/Workspace/codindex/data/codindex.db"
+      }
+    }
+  }
+}

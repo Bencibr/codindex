@@ -1,0 +1,18 @@
+{
+  // 发布构建专用配置：在 tsconfig.json 基础上剔除测试与手工脚本。
+  //
+  // 为什么单独一份：`tsc` 没有「只编译不输出」的开关，如果构建直接复用
+  // 类型检查用的 tsconfig.json（include: src/**/*），dist 里会混进
+  // tests/*.test.js + setup.js，`npm pack` 把它们一起发布出去（133 个文件），
+  // 还会在用户机器上被 vitest 误拾取。类型检查仍走 tsconfig.json，
+  // 保证测试代码同样受 strict 约束。
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/tests",
+    "src/tests/**/*",
+    "src/tests/bench-scan.ts",
+    "src/tests/bench"
+  ]
+}

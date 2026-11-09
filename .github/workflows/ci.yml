@@ -1,0 +1,61 @@
+name: Codindex CI
+on: [push, pull_request]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # peer 冲突由仓库根的 .npmrc 统一处理（legacy-peer-deps=true），
+      # 这里不再单独加 flag —— CI 与用户 clone 后的命令必须完全一致，
+      # 否则 CI 绿而 README 里的 `npm install` 直接 ERESOLVE。
+      - run: npm ci
+
+      # 类型检查必须过。之前 tsc 有 106 处错误却没人拦，
+      # 结果 `npm run build` 一直是红的。
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test
+
+      # 构建必须能产出可运行的 dist（含 Web UI 静态资源）。
+      - name: Build
+        run: npm run build
+
+      - name: Verify dist boots
+        run: |
+          CODINDEX_DB=:memory: PORT=3111 node dist/index.js &
+          SERVER_PID=$!
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:3111/api/projects > /dev/null; then
+              echo "dist boots ok"
+              kill $SERVER_PID
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "dist failed to boot"
+          kill $SERVER_PID 2>/dev/null || true
+          exit 1
+
+  self-scan:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      # 端到端冒烟：走应用自身的公开 API（getDb 建表 + scanProject 扫描），
+      # 而不是旧版那样手搓 drizzle-kit push + 裸 SQL INSERT + require() 调 ESM。
+      - name: Self-scan
+        run: npx tsx scripts/self-scan.ts

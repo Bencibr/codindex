@@ -1,0 +1,126 @@
+{
+  "timestamp": "2026-06-27T04:00:48.130Z",
+  "repo": "/tmp/codegraph-bench",
+  "projectId": "bench-codegraph-1782532778046",
+  "results": [
+    {
+      "questionId": "Q1",
+      "label": "Architecture overview",
+      "codindex": {
+        "toolCalls": 2,
+        "elapsedMs": 84,
+        "responseChars": 1032
+      },
+      "raw": {
+        "fileReads": 8,
+        "elapsedMs": 6,
+        "totalLines": 5431,
+        "totalRawChars": 207168
+      },
+      "efficiency": {
+        "callReductionPct": 75,
+        "dataReductionPct": 100
+      }
+    },
+    {
+      "questionId": "Q2",
+      "label": "Extraction pipeline (source to graph)",
+      "codindex": {
+        "toolCalls": 3,
+        "elapsedMs": 2,
+        "responseChars": 638
+      },
+      "raw": {
+        "fileReads": 6,
+        "elapsedMs": 2,
+        "totalLines": 8458,
+        "totalRawChars": 359157
+      },
+      "efficiency": {
+        "callReductionPct": 50,
+        "dataReductionPct": 100
+      }
+    },
+    {
+      "questionId": "Q3",
+      "label": "MCP tool request flow",
+      "codindex": {
+        "toolCalls": 2,
+        "elapsedMs": 2,
+        "responseChars": 260
+      },
+      "raw": {
+        "fileReads": 5,
+        "elapsedMs": 2,
+        "totalLines": 5837,
+        "totalRawChars": 260137
+      },
+      "efficiency": {
+        "callReductionPct": 60,
+        "dataReductionPct": 100
+      }
+    },
+    {
+      "questionId": "Q4",
+      "label": "Explore: search + context assembly",
+      "codindex": {
+        "toolCalls": 2,
+        "elapsedMs": 2,
+        "responseChars": 58506
+      },
+      "raw": {
+        "fileReads": 4,
+        "elapsedMs": 2,
+        "totalLines": 6612,
+        "totalRawChars": 291619
+      },
+      "efficiency": {
+        "callReductionPct": 50,
+        "dataReductionPct": 80
+      }
+    },
+    {
+      "questionId": "Q5",
+      "label": "Cross-language bridging (Swift<->ObjC)",
+      "codindex": {
+        "toolCalls": 3,
+        "elapsedMs": 1,
+        "responseChars": 741
+      },
+      "raw": {
+        "fileReads": 6,
+        "elapsedMs": 3,
+        "totalLines": 4101,
+        "totalRawChars": 178817
+      },
+      "efficiency": {
+        "callReductionPct": 50,
+        "dataReductionPct": 100
+      }
+    },
+    {
+      "questionId": "Q6",
+      "label": "Reuse detection / similar functions",
+      "codindex": {
+        "toolCalls": 3,
+        "elapsedMs": 1,
+        "responseChars": 1680
+      },
+      "raw": {
+        "fileReads": 4,
+        "elapsedMs": 1,
+        "totalLines": 2942,
+        "totalRawChars": 106429
+      },
+      "efficiency": {
+        "callReductionPct": 25,
+        "dataReductionPct": 98
+      }
+    }
+  ],
+  "summary": {
+    "avgCallReductionPct": 52,
+    "avgDataReductionPct": 96,
+    "questions": 6
+  }
+}
