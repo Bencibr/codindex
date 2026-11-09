@@ -23,6 +23,17 @@
   堆功能形容词更能说明项目解决什么问题；client 列表补上 Windsurf / Codex。
 - **头图版本号 v1.0.0 → v0.1.1**：banner 上的版本停留在更名前的 1.0.0，
   与实际发布的 0.1.x 不一致。两套（dark / light）同步。
+- **文档归入 `docs/`**：根目录原有 7 个 md（README ×2、LICENSE、CHANGELOG、
+  AGENTS、CLAUDE、CONTRIBUTING、SECURITY），加上 docs/ 里 3 个，一眼看不出
+  从哪读起。现只保留必须放在根目录的：`README(.en).md`（GitHub 只渲染根目录
+  README）、`LICENSE`（npm 约定）、`CHANGELOG.md`（约定）、`AGENTS.md` /
+  `CLAUDE.md`（工具只从根目录自动加载）。`CONTRIBUTING.md` / `SECURITY.md`
+  移入 `docs/` —— GitHub 认 root / docs / .github 三处，移到 docs 后仍会在
+  「Contributing」入口中显示。
+- 新增 `docs/README.md` 作为文档索引，说明每份文档的位置与适用场景。
+- **README 里指向文档的链接改为绝对 GitHub 地址**：npm 不会重写相对链接，
+  `docs/TOOLS.md` 这类路径在 npmjs.com 上是 404。banner 图片同样改为
+  `raw.githubusercontent.com` 绝对地址。
 
 ## [0.1.0] - 2026-11-09
 

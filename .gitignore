@@ -19,9 +19,12 @@ data/*.db-shm
 # 本地草稿/一次性分析文档不进版本库；但 README 与 AGENTS/CLAUDE 里公开引用的
 # 文档必须能被 clone 到，否则新环境里那些链接全是死的。
 docs/*
-!docs/REGRESSION-REPORT.md
+!docs/README.md
 !docs/TOOLS.md
 !docs/API.md
+!docs/CONTRIBUTING.md
+!docs/SECURITY.md
+!docs/REGRESSION-REPORT.md
 
 # 运行时状态（本地会话产物，不进版本库）
 .bugx/

@@ -2,22 +2,22 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/codindex-hero-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="assets/codindex-hero-light.svg">
-    <img alt="Codindex — structural code index for AI agents" src="assets/codindex-hero-dark.svg" width="100%">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Bencibr/codindex/main/assets/codindex-hero-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Bencibr/codindex/main/assets/codindex-hero-light.svg">
+    <img alt="Codindex — structural code index for AI agents" src="https://raw.githubusercontent.com/Bencibr/codindex/main/assets/codindex-hero-dark.svg" width="100%">
   </picture>
 </p>
 
 <p align="center">
-  <b>English</b> · <a href="README.md">简体中文</a>
+  <b>English</b> · <a href="https://github.com/Bencibr/codindex/blob/main/README.md">简体中文</a>
 </p>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/codindex"><img alt="npm version" src="https://img.shields.io/npm/v/codindex?color=38BDF8&label=npm"></a>
   <a href="#quick-start"><img alt="Node.js ≥ 22.5" src="https://img.shields.io/badge/node-%E2%89%A522.5-339933?logo=node.js&logoColor=white"></a>
-  <a href="docs/TOOLS.md"><img alt="MCP tools" src="https://img.shields.io/badge/MCP_tools-32-38BDF8"></a>
+  <a href="https://github.com/Bencibr/codindex/blob/main/docs/TOOLS.md"><img alt="MCP tools" src="https://img.shields.io/badge/MCP_tools-32-38BDF8"></a>
   <a href="#supported-languages"><img alt="Languages" src="https://img.shields.io/badge/languages-6-38BDF8"></a>
-  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-0F172A"></a>
+  <a href="https://github.com/Bencibr/codindex/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-0F172A"></a>
 </p>
 
 **A local-first codebase indexing (code indexing) and code intelligence server that hands your code's
@@ -198,7 +198,7 @@ with the outer key renamed to `"servers"`.
 
 ## 32 tools
 
-Full list with parameters and return shapes: **[docs/TOOLS.md](docs/TOOLS.md)**.
+Full list with parameters and return shapes: **[docs/TOOLS.md](https://github.com/Bencibr/codindex/blob/main/docs/TOOLS.md)**.
 
 | Category | Count | Highlights |
 |---|---|---|
@@ -304,13 +304,13 @@ optionally better-sqlite3) + Drizzle ORM + FTS5 · Hono · React 18 + MUI 5 (CDN
 
 | Document | Contents |
 |---|---|
-| [docs/TOOLS.md](docs/TOOLS.md) | All 32 tools, 4 resources and 1 prompt: parameters, returns, function-name resolution (Chinese) |
-| [docs/API.md](docs/API.md) | Web API routes, Web UI pages, environment variables, PRD feature tracking (Chinese) |
-| [CHANGELOG.md](CHANGELOG.md) | Changelog (Chinese) |
-| [AGENTS.md](AGENTS.md) / [CLAUDE.md](CLAUDE.md) | Usage guide written for AI assistants (Chinese) |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Dev setup, PR checklist, adding a language (English) |
-| [SECURITY.md](SECURITY.md) | Vulnerability reporting and security boundaries (English) |
-| [docs/REGRESSION-REPORT.md](docs/REGRESSION-REPORT.md) | Regression test report (Chinese) |
+| [docs/](https://github.com/Bencibr/codindex/blob/main/docs/README.md) | Documentation index — every public doc lives here |
+| [docs/TOOLS.md](https://github.com/Bencibr/codindex/blob/main/docs/TOOLS.md) | All 32 tools, 4 resources and 1 prompt: parameters, returns, function-name resolution (Chinese) |
+| [docs/API.md](https://github.com/Bencibr/codindex/blob/main/docs/API.md) | Web API routes, Web UI pages, environment variables, PRD feature tracking (Chinese) |
+| [docs/CONTRIBUTING.md](https://github.com/Bencibr/codindex/blob/main/docs/CONTRIBUTING.md) | Dev setup, PR checklist, adding a language (English) |
+| [docs/SECURITY.md](https://github.com/Bencibr/codindex/blob/main/docs/SECURITY.md) | Vulnerability reporting and security boundaries (English) |
+| [CHANGELOG.md](https://github.com/Bencibr/codindex/blob/main/CHANGELOG.md) | Changelog (Chinese) |
+| [AGENTS.md](https://github.com/Bencibr/codindex/blob/main/AGENTS.md) / [CLAUDE.md](https://github.com/Bencibr/codindex/blob/main/CLAUDE.md) | Usage guide written for AI assistants (Chinese) |
 
 Common commands:
 

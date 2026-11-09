@@ -42,12 +42,12 @@ touches your real `data/codindex.db`.
 2. `npm test` passes.
 3. `npm run build` succeeds.
 4. If you added or renamed an MCP tool, update **all** of:
-   `src/mcp/server.ts` (`TOOL_DEFS`), [docs/TOOLS.md](docs/TOOLS.md),
-   the tool table in [README.md](README.md), and
-   [AGENTS.md](AGENTS.md) / [CLAUDE.md](CLAUDE.md).
+   `src/mcp/server.ts` (`TOOL_DEFS`), [docs/TOOLS.md](TOOLS.md),
+   the tool table in [README.md](../README.md), and
+   [AGENTS.md](../AGENTS.md) / [CLAUDE.md](../CLAUDE.md).
    The tool count (currently 32, grouped 6/5/3/8/5/5) appears in several places
    and has drifted before — grep for it.
-5. Note user-visible changes under `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md).
+5. Note user-visible changes under `## [Unreleased]` in [CHANGELOG.md](../CHANGELOG.md).
 
 CI runs typecheck → tests → build → a boot probe of `dist/`, then a self-scan
 job that exercises the public API. A green CI is required.
@@ -90,4 +90,4 @@ For security issues, **do not** open a public issue — see [SECURITY.md](SECURI
 ## License
 
 By contributing you agree your contributions are licensed under the MIT License
-(see [LICENSE](LICENSE)).
+(see [LICENSE](../LICENSE)).

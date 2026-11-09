@@ -2,22 +2,22 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/codindex-hero-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="assets/codindex-hero-light.svg">
-    <img alt="Codindex — structural code index for AI agents" src="assets/codindex-hero-dark.svg" width="100%">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Bencibr/codindex/main/assets/codindex-hero-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Bencibr/codindex/main/assets/codindex-hero-light.svg">
+    <img alt="Codindex — structural code index for AI agents" src="https://raw.githubusercontent.com/Bencibr/codindex/main/assets/codindex-hero-dark.svg" width="100%">
   </picture>
 </p>
 
 <p align="center">
-  <a href="README.en.md">English</a> · <b>简体中文</b>
+  <a href="https://github.com/Bencibr/codindex/blob/main/README.en.md">English</a> · <b>简体中文</b>
 </p>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/codindex"><img alt="npm version" src="https://img.shields.io/npm/v/codindex?color=38BDF8&label=npm"></a>
   <a href="#快速开始"><img alt="Node.js ≥ 22.5" src="https://img.shields.io/badge/node-%E2%89%A522.5-339933?logo=node.js&logoColor=white"></a>
-  <a href="docs/TOOLS.md"><img alt="MCP tools" src="https://img.shields.io/badge/MCP_tools-32-38BDF8"></a>
+  <a href="https://github.com/Bencibr/codindex/blob/main/docs/TOOLS.md"><img alt="MCP tools" src="https://img.shields.io/badge/MCP_tools-32-38BDF8"></a>
   <a href="#支持的语言"><img alt="Languages" src="https://img.shields.io/badge/languages-6-38BDF8"></a>
-  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-0F172A"></a>
+  <a href="https://github.com/Bencibr/codindex/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-0F172A"></a>
 </p>
 
 **本地代码索引服务：用 MCP 把代码库结构交给 AI。**
@@ -198,7 +198,7 @@ curl http://localhost:3100/api/projects/bace225b-.../overview
 
 ## 32 个工具
 
-完整清单（参数、返回值、解析规则）见 **[docs/TOOLS.md](docs/TOOLS.md)**。
+完整清单（参数、返回值、解析规则）见 **[docs/TOOLS.md](https://github.com/Bencibr/codindex/blob/main/docs/TOOLS.md)**。
 
 | 类别 | 数量 | 代表工具 |
 |---|---|---|
@@ -221,7 +221,7 @@ curl http://localhost:3100/api/projects/bace225b-.../overview
 除了工具，MCP 还提供 **4 个 Resource**（`codindex://projects` 及
 `codindex://projects/{id}/{overview,functions,features}`）供客户端直接挂载，
 以及 **1 个 Prompt**（`codindex-guide`）用于注入使用指引。见
-[docs/TOOLS.md](docs/TOOLS.md#resources4-个)。
+[docs/TOOLS.md](https://github.com/Bencibr/codindex/blob/main/docs/TOOLS.md#resources4-个)。
 
 ---
 
@@ -305,13 +305,13 @@ Node.js ≥ 22.5 + TypeScript (ESM) · Tree-sitter · SQLite（内置 `node:sqli
 
 | 文档 | 内容 |
 |---|---|
-| [docs/TOOLS.md](docs/TOOLS.md) | 32 个工具 + 4 个 Resource + 1 个 Prompt 的完整参考 |
-| [docs/API.md](docs/API.md) | Web API 路由、Web UI 页面、环境变量、PRD 功能追踪 |
-| [CHANGELOG.md](CHANGELOG.md) | 变更记录 |
-| [AGENTS.md](AGENTS.md) / [CLAUDE.md](CLAUDE.md) | 给 AI 助手的使用指南 |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | 开发环境、提交流程、如何加语言 |
-| [SECURITY.md](SECURITY.md) | 漏洞报告渠道与安全边界 |
-| [docs/REGRESSION-REPORT.md](docs/REGRESSION-REPORT.md) | 回归测试报告 |
+| [docs/](https://github.com/Bencibr/codindex/blob/main/docs/README.md) | 文档索引 —— 所有对外文档都收在这里 |
+| [docs/TOOLS.md](https://github.com/Bencibr/codindex/blob/main/docs/TOOLS.md) | 32 个工具 + 4 个 Resource + 1 个 Prompt 的完整参考 |
+| [docs/API.md](https://github.com/Bencibr/codindex/blob/main/docs/API.md) | Web API 路由、Web UI 页面、环境变量、PRD 功能追踪 |
+| [docs/CONTRIBUTING.md](https://github.com/Bencibr/codindex/blob/main/docs/CONTRIBUTING.md) | 开发环境、提交流程、如何加语言 |
+| [docs/SECURITY.md](https://github.com/Bencibr/codindex/blob/main/docs/SECURITY.md) | 漏洞报告渠道与安全边界 |
+| [CHANGELOG.md](https://github.com/Bencibr/codindex/blob/main/CHANGELOG.md) | 变更记录 |
+| [AGENTS.md](https://github.com/Bencibr/codindex/blob/main/AGENTS.md) / [CLAUDE.md](https://github.com/Bencibr/codindex/blob/main/CLAUDE.md) | 给 AI 助手的使用指南 |
 
 开发常用命令：
 
