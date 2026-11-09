@@ -35,9 +35,14 @@ who calls what, and what a change will break.
 - **Structural** — call edges parsed from the AST, not guessed from text
 - **Fast** — self-scan of 38 files / 145 functions / 7,570 call edges in 3.4s
 
-Works as an MCP server with Claude Code, Cursor, VS Code and any Model Context Protocol client.
-Code search and code navigation run on SQLite FTS5; semantic clusters come from call-graph BFS.
-What comes out is a queryable code graph.
+Works as an MCP server with Claude Code, Cursor, VS Code, Windsurf, Codex and any client that
+speaks the Model Context Protocol. Code search and code navigation run on SQLite FTS5; semantic
+clusters come from call-graph BFS. What comes out is a queryable code graph.
+
+The bottleneck in agentic coding is not model capability — it's what you put in front of the model.
+Dumping a whole repo blows the context window; grepping gives you fragments. Codindex builds a
+reusable repo index so the agent pulls structured code context on demand, instead of re-reading
+tens of thousands of lines every session.
 
 ---
 

@@ -30,9 +30,13 @@ tree-sitter 解析 AST，把函数、调用图、模块依赖图、控制流图�
 - **结构化** — 调用边由 AST 解析得出，不是正则猜的
 - **快** — 自扫描 38 文件 / 145 函数 / 7,570 调用边，3.4 秒
 
-以 MCP server 接入 Claude Code、Cursor、VS Code 及任何支持 Model Context Protocol 的 client。
-代码搜索与代码导航（code navigation）走 SQLite FTS5，语义簇走调用图 BFS，
-产物是一张可查询的代码图（code graph）。
+以 MCP server 接入 Claude Code、Cursor、VS Code、Windsurf、Codex 及任何支持
+Model Context Protocol 的 client。代码搜索与代码导航（code navigation）走 SQLite FTS5，
+语义簇走调用图 BFS，产物是一张可查询的代码图（code graph）。
+
+agentic coding 的关键瓶颈不是模型能力，而是给它看什么：整仓塞进上下文会爆，靠 grep
+又只能拿到碎片。Codindex 把仓库索引成一份可复用的 repo index，让 AI 按需取结构化
+code context——而不是把几万行源码反复喂进去。
 
 <p align="center"><sub>
 Codindex — a local-first code indexing, codebase indexing and code intelligence server for
