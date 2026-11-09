@@ -1,6 +1,6 @@
 {
   "name": "codindex",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server that indexes any codebase with tree-sitter into one local SQLite file — function inventory, call graph, call chains, module dependency graph, control-flow graph, impact analysis and dead-code detection for AI coding agents (Claude Code, Cursor, VS Code). 32 tools, 6 languages, no LLM calls, no source upload, no telemetry.",
   "type": "module",
   "main": "./dist/index.js",

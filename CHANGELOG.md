@@ -5,9 +5,40 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-09
+
+### Changed
+
+- **npm 关键词 32 → 38**：补入横向场景词（`repo-index`、`code-context`、
+  `agentic-coding`）与 MCP 客户端名（`codex`、`windsurf`、`claude-mcp`）。
+  原关键词缺 `codex` / `windsurf` —— README 只提了 Claude Code / Cursor /
+  VS Code，而这两个是同领域 client，用户会按名字搜。
+  刻意**未加** `rag`（4019 个包）与 `vibe-coding`（1176 个包）：搜索量大但与
+  产品定位相反，README 里明确写了「不是向量检索 / RAG」。
+- **npm description 128 → 334 字符**：原文只列 function inventory / call graph /
+  module deps / impact analysis 四项，漏了 call chains、control-flow graph、
+  dead-code detection，也漏了「6 种语言 / 32 工具 / 无 LLM 调用 / 不上传源码」
+  这些选型时先看的硬指标。
+- **README 补 agentic coding 定位段**：「整仓塞进上下文会爆、grep 只拿碎片」比
+  堆功能形容词更能说明项目解决什么问题；client 列表补上 Windsurf / Codex。
+- **头图版本号 v1.0.0 → v0.1.1**：banner 上的版本停留在更名前的 1.0.0，
+  与实际发布的 0.1.x 不一致。两套（dark / light）同步。
+
+## [0.1.0] - 2026-11-09
+
+首次发布到 npm（`npm i -g codindex`），`latest` 标签指向本版本。
+
+版本号从 1.0.0 改为 0.1.0：此前从未对外发布过，用 1.0.0 意味着承诺 SemVer
+稳定接口，而 MCP 工具的参数与返回结构仍在调整。0.1.0 更符合实际状态，
+也给后续破坏性变更留出空间。
+
+能力范围：扫描 6 种语言，产出函数清单、调用图、类型关系、模块依赖图、
+复用评分、PRD 功能追踪、函数语义摘要、CFG 控制流图；
+对外暴露 32 个 MCP 工具 + 4 个 Resource + 1 个 Prompt，
+以及 Web UI 和 stdio MCP Server，支持 chokidar 文件监听增量同步。
+
 ### Added
 
-- 发布到 npm：`npm i -g codindex`，`latest` 指向 `0.1.0`。
 - `CONTRIBUTING.md`（开发环境、PR 检查清单、如何新增语言）与 `SECURITY.md`
   （漏洞报告渠道、安全边界、已实施的加固项）。
 - `docs/TOOLS.md` 补充 MCP 的另外两类接口：4 个 Resource
@@ -129,15 +160,3 @@
   `.Codex/skills/...`、`docs/` 被整体忽略导致公开链接全死、README 让用户
   手工安装已在 `dependencies` 里的 tree-sitter 包。
 
-## [0.1.0] - 2026-11-09
-
-首次发布到 npm（`npm i -g codindex`），`latest` 标签指向本版本。
-
-版本号从 1.0.0 改为 0.1.0：此前从未对外发布过，用 1.0.0 意味着承诺 SemVer
-稳定接口，而 MCP 工具的参数与返回结构仍在调整。0.1.0 更符合实际状态，
-也给后续破坏性变更留出空间。
-
-能力范围：扫描 6 种语言，产出函数清单、调用图、类型关系、模块依赖图、
-复用评分、PRD 功能追踪、函数语义摘要、CFG 控制流图；
-对外暴露 32 个 MCP 工具 + 4 个 Resource + 1 个 Prompt，
-以及 Web UI 和 stdio MCP Server，支持 chokidar 文件监听增量同步。
