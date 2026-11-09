@@ -80,7 +80,7 @@ codindex             # Web UI → http://localhost:3100
 **从源码安装**（想改代码或跑测试时）：
 
 ```bash
-git clone https://github.com/Bencibr/codeindex.git codindex && cd codindex
+git clone https://github.com/Bencibr/codindex.git codindex && cd codindex
 npm install && npm run build
 npm pack && npm i -g ./codindex-*.tgz
 ```

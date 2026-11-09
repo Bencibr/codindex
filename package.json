@@ -78,11 +78,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Bencibr/codeindex.git"
+    "url": "git+https://github.com/Bencibr/codindex.git"
   },
-  "homepage": "https://github.com/Bencibr/codeindex#readme",
+  "homepage": "https://github.com/Bencibr/codindex#readme",
   "bugs": {
-    "url": "https://github.com/Bencibr/codeindex/issues"
+    "url": "https://github.com/Bencibr/codindex/issues"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.18",

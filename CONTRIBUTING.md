@@ -12,7 +12,7 @@ how to run the tests, and what a mergeable change looks like.
 ## Setup
 
 ```bash
-git clone https://github.com/Bencibr/codeindex.git codindex
+git clone https://github.com/Bencibr/codindex.git codindex
 cd codindex
 npm install
 ```

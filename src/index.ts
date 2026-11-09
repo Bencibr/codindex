@@ -684,7 +684,7 @@ async function main() {
   CODINDEX_DB           SQLite 文件路径，默认 data/codindex.db（支持 :memory:）
   CODINDEX_SQLITE       设为 better-sqlite3 时改用原生驱动
 
-文档：https://github.com/Bencibr/codeindex`);
+文档：https://github.com/Bencibr/codindex`);
     return;
   }
 

@@ -77,7 +77,7 @@ codindex             # Web UI → http://localhost:3100
 **Install from source** (when you want to change code or run the tests):
 
 ```bash
-git clone https://github.com/Bencibr/codeindex.git codindex && cd codindex
+git clone https://github.com/Bencibr/codindex.git codindex && cd codindex
 npm install && npm run build
 npm pack && npm i -g ./codindex-*.tgz
 ```

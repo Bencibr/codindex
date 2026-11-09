@@ -6,7 +6,7 @@
 
 Report privately via either:
 
-- GitHub Security Advisories: <https://github.com/Bencibr/codeindex/security/advisories/new>
+- GitHub Security Advisories: <https://github.com/Bencibr/codindex/security/advisories/new>
 - Email: **line@oksu.club**
 
 Include what you can:
